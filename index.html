@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OREX GAMES</title>
+    <!-- تضمين مكتبة تسجيل الدخول الرسمية من Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Motiva Sans", Arial, Helvetica, sans-serif; }
+        body { background-color: #1b2838; color: #c6d4df; font-size: 13px; height: 100vh; overflow: hidden; }
+
+        /* الشريط العلوي */
+        .top-navbar {
+            background-color: #171a21;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #000;
+        }
+        .brand-logo { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 2px; cursor: pointer; }
+        .brand-logo span { color: #66c0f4; }
+        
+        .top-nav-links { display: flex; gap: 20px; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .top-nav-links a { color: #b8b6b4; text-decoration: none; transition: color 0.2s; padding: 18px 0; }
+        .top-nav-links a:hover, .top-nav-links a.active { color: #1a9fff; border-bottom: 3px solid #1a9fff; }
+
+        .top-right-controls { display: flex; align-items: center; gap: 12px; }
+
+        /* ملف المستخدم العلوي */
+        .user-profile-badge {
+            display: flex; align-items: center; gap: 8px; background: #0e141d; padding: 4px 10px; border-radius: 20px; border: 1px solid #2a475e;
+        }
+        .user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .user-name { color: #fff; font-weight: bold; font-size: 12px; }
+
+        .main-container { height: calc(100vh - 60px); overflow-y: auto; }
+
+        /* --- تصميم قسم المكتبة --- */
+        .library-layout { display: flex; height: 100%; }
+        .library-sidebar {
+            width: 260px; background: #121923; border-inline-end: 1px solid #2a475e;
+            display: flex; flex-direction: column; padding: 10px; flex-shrink: 0;
+        }
+        .sidebar-search { background: #1e2837; border: 1px solid #000; color: #fff; padding: 6px; font-size: 12px; margin-bottom: 10px; width: 100%; }
+        .sidebar-header { color: #8f98a0; font-size: 11px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+        .game-list-item {
+            display: flex; align-items: center; gap: 8px; padding: 6px 8px; color: #8f98a0;
+            border-radius: 2px; cursor: pointer; text-decoration: none; font-size: 13px;
+        }
+        .game-list-item:hover, .game-list-item.active { background: #2a475e; color: #fff; }
+        .game-icon { width: 16px; height: 16px; border-radius: 2px; background: #66c0f4; }
+
+        .library-content { flex: 1; padding: 20px; overflow-y: auto; background: #1b2838; }
+        .section-header { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .recent-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .library-game-card {
+            background: #171a21; border-radius: 3px; overflow: hidden; cursor: pointer; transition: transform 0.2s; border: 1px solid #2a475e;
+        }
+        .library-game-card:hover { transform: translateY(-4px); border-color: #66c0f4; }
+        .library-game-card img { width: 100%; height: 190px; object-fit: cover; display: block; }
+        .card-info { padding: 8px; text-align: center; font-size: 12px; color: #fff; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- تصميم المتجر --- */
+        .store-container { max-width: 940px; margin: 20px auto; padding: 0 10px; }
+        .game-title-header { font-size: 26px; color: #fff; margin-bottom: 15px; }
+        .game-main-layout { display: flex; gap: 16px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 3px; }
+        .media-viewer { flex: 1.8; }
+        .main-media-display { width: 100%; height: 335px; background: #000; object-fit: cover; }
+        .game-info-sidebar { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .side-cover-img { width: 100%; height: 140px; object-fit: cover; }
+        .side-description { font-size: 12px; color: #c6d4df; line-height: 1.5; margin: 10px 0; }
+        .purchase-banner { background: #000; padding: 15px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-install { background: linear-gradient(to right, #75b022 5%, #588a1b 95%); color: #d2efa9; padding: 8px 20px; font-weight: bold; text-decoration: none; border-radius: 2px; }
+
+        /* النافذة المنبثقة للـ Google Login */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .google-auth-box {
+            background: #ffffff; color: #202124; padding: 30px 25px; border-radius: 8px; width: 360px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .google-logo { width: 40px; margin-bottom: 10px; }
+        .google-auth-box h2 { font-size: 18px; margin-bottom: 5px; font-family: Roboto, Arial, sans-serif; color: #000; }
+        .google-auth-box p { font-size: 12px; color: #5f6368; margin-bottom: 20px; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- نافذة دخول Google الرسمية -->
+    <div id="googleAuthModal" class="modal-overlay">
+        <div class="google-auth-box">
+            <svg class="google-logo" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <h2>تسجيل الدخول بحساب Google</h2>
+            <p>اختر حسابك المسجل في المتصفح للمتابعة</p>
+
+            <!-- عنصر خيار Google الرسمي ومدمج به الـ Client ID الخاص بك -->
+            <div id="g_id_onload"
+                data-client_id="712651239178-3lv5ve2qe893g8gk4caq8disjsjrsl37.apps.googleusercontent.com"
+                data-callback="handleCredentialResponse"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+        </div>
+    </div>
+
+    <!-- الهيدر الرئيسي -->
+    <header class="top-navbar">
+        <div class="brand-logo" onclick="switchTab('store')">OREX <span>GAMES</span></div>
+        <div class="top-nav-links">
+            <a href="#" id="navStore" onclick="switchTab('store')">المتجر</a>
+            <a href="#" id="navLibrary" class="active" onclick="switchTab('library')">المكتبة</a>
+        </div>
+        <div class="top-right-controls">
+            <div id="userProfileBadge" class="user-profile-badge hidden">
+                <img id="userAvatarImg" class="user-avatar" src="" alt="Avatar">
+                <span id="userNameDisplay" class="user-name"></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- واجهة المكتبة -->
+        <section id="libraryView" class="library-layout">
+            <div class="library-sidebar">
+                <input type="text" class="sidebar-search" placeholder="بحث في الألعاب..." oninput="filterLibraryList(this.value)">
+                <div class="sidebar-header">كل الألعاب</div>
+                <div id="sidebarGamesList"></div>
+            </div>
+            <div class="library-content">
+                <div class="section-header">الألعاب الأخيرة (Recent Games)</div>
+                <div class="recent-games-grid" id="recentGamesGrid"></div>
+            </div>
+        </section>
+
+        <!-- واجهة المتجر -->
+        <section id="storeView" class="hidden">
+            <div class="store-container" id="gameDisplayArea"></div>
+        </section>
+    </div>
+
+    <script>
+        let selectedGameIndex = 0;
+        const defaultGames = [
+            { title: "FiveM", description: "خوادم حياة واقعية مخصصة للعب الجماعي.", category: "Roleplay", image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600", link: "#", price: "مجانية" },
+            { title: "Counter-Strike 2", description: "لعبة إطلاق نار تكتيكية تنافسية.", category: "FPS / Action", image: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600", link: "#", price: "مجانية" }
+        ];
+
+        // الاستجابة القادمة من جوجل وتحليل الـ JWT Token لاستخراج الحساب الحقيقي
+        function handleCredentialResponse(response) {
+            const responsePayload = parseJwt(response.credential);
+            
+            const googleUser = {
+                name: responsePayload.name,
+                email: responsePayload.email,
+                avatar: responsePayload.picture
+            };
+
+            localStorage.setItem('orex_real_google_user', JSON.stringify(googleUser));
+            document.getElementById('googleAuthModal').classList.add('hidden');
+            showUserProfile(googleUser);
+        }
+
+        // فك شفرة البيانات الأمنية القادمة من سيرفر Google
+        function parseJwt (token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function checkGoogleAuth() {
+            const savedUser = JSON.parse(localStorage.getItem('orex_real_google_user'));
+            if (savedUser) {
+                document.getElementById('googleAuthModal').classList.add('hidden');
+                showUserProfile(savedUser);
+            } else {
+                document.getElementById('googleAuthModal').classList.remove('hidden');
+            }
+        }
+
+        function showUserProfile(user) {
+            document.getElementById('userProfileBadge').classList.remove('hidden');
+            document.getElementById('userNameDisplay').textContent = user.name;
+            document.getElementById('userAvatarImg').src = user.avatar;
+        }
+
+        function renderLibrary() {
+            const sidebarList = document.getElementById('sidebarGamesList');
+            const recentGrid = document.getElementById('recentGamesGrid');
+
+            sidebarList.innerHTML = defaultGames.map((g, i) => `
+                <div class="game-list-item ${i === selectedGameIndex ? 'active' : ''}" onclick="openGameFromLibrary(${i})">
+                    <div class="game-icon"></div>
+                    <span>${g.title}</span>
+                </div>
+            `).join('');
+
+            recentGrid.innerHTML = defaultGames.map((g, i) => `
+                <div class="library-game-card" onclick="openGameFromLibrary(${i})">
+                    <img src="${g.image}" alt="${g.title}">
+                    <div class="card-info">${g.title}</div>
+                </div>
+            `).join('');
+        }
+
+        function openGameFromLibrary(index) {
+            selectedGameIndex = index;
+            switchTab('store');
+        }
+
+        function renderStore() {
+            const displayArea = document.getElementById('gameDisplayArea');
+            const currentGame = defaultGames[selectedGameIndex] || defaultGames[0];
+
+            displayArea.innerHTML = `
+                <h1 class="game-title-header">${currentGame.title}</h1>
+                <div class="game-main-layout">
+                    <div class="media-viewer"><img src="${currentGame.image}" class="main-media-display"></div>
+                    <div class="game-info-sidebar">
+                        <div>
+                            <img src="${currentGame.image}" class="side-cover-img">
+                            <p class="side-description">${currentGame.description}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="purchase-banner">
+                    <div>
+                        <div style="font-size:16px; color:#fff;">${currentGame.title}</div>
+                        <span style="font-size:12px; color:#8f98a0;">${currentGame.category} - ${currentGame.price}</span>
+                    </div>
+                    <a href="${currentGame.link}" target="_blank" class="btn-install">تحميل اللعبة</a>
+                </div>
+            `;
+        }
+
+        function switchTab(tab) {
+            document.getElementById('libraryView').classList.add('hidden');
+            document.getElementById('storeView').classList.add('hidden');
+            if (tab === 'library') {
+                document.getElementById('libraryView').classList.remove('hidden');
+                renderLibrary();
+            } else if (tab === 'store') {
+                document.getElementById('storeView').classList.remove('hidden');
+                renderStore();
+            }
+        }
+
+        function filterLibraryList(query) {
+            const items = document.querySelectorAll('.game-list-item');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            checkGoogleAuth();
+            switchTab('library'); 
+        });
+    </script>
+</body>
+</html>
